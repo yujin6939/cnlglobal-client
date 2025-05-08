@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>하이퍼링크 관리</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #f8f9fa;
+    }
+    .admin-tabs-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(90deg, #002244, #004488);
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      flex-wrap: wrap;
+    }
+    .admin-tabs {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .admin-tab {
+      color: white;
+      font-weight: 600;
+      padding: 0.6rem 1.4rem;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      text-decoration: none;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    .admin-tab:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+    .admin-tab.active {
+      background: white;
+      color: #002244;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .logout-btn {
+      padding: 0.6rem 1rem;
+      background-color: white;
+      color: #002244;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-top: 0.5rem;
+    }
+    .logout-btn:hover {
+      background-color: #dde4ee;
+    }
+    .tab-buttons, .card-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .tab-button, .card-button {
+      background-color: #ddd;
+      color: #002244;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .tab-button.active, .card-button.active {
+      background-color: #002244;
+      color: white;
+    }
+    #editor {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    #editor input {
+      width: 100%;
+      margin-bottom: 0.8rem;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #save-btn {
+      margin-top: 1rem;
+      background: #0055aa;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.4rem;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #preview {
+      margin-top: 2rem;
+      background: #f0f0f0;
+      padding: 1rem;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <header class="admin-tabs-container">
+    <nav class="admin-tabs">
+      <a href="admin.html" class="admin-tab">공지사항 관리</a>
+      <a href="admin-links.html" class="admin-tab active">하이퍼링크 관리</a>
+      <a href="admin-contact.html" class="admin-tab">연락처 관리</a>
+    </nav>
+    <button class="logout-btn" id="logout-btn">로그아웃</button>
+  </header>
+
+  <div class="tab-buttons" id="service-tabs"></div>
+  <div class="card-buttons" id="card-tabs"></div>
+  <div id="editor"></div>
+  <button id="save-btn">💾 저장하기</button>
+  <div id="preview"></div>
+
+  <script>
+    const cardTitles = {
+      ourservice1: ["FCL / LCL / AIR / Express Cargo / Multi Modal", "CONSOLIDATED SHIPPING & AIR", "CUSTOMS CLEARING(IOR)", "SPECIALIZED DOCUMENTATION", "PROJECT CARGO", "COMMONITY CARGO"],
+      ourservice2: ["MC-LICENSED OWN BROKERAGE", "1000+ CONTRACTED TRUCKERS", "EXPERTISE IN EX / IM CONTAINER DRAGE", "CROSS BORDER TRUCKING", "STABLE TRACKING 7D/24H", "SPECIAL CARGO", "FULL RANGE SERVICE"],
+      ourservice3: ["WAREHOUSE", "3PL SERVICE FBA/FBM", "EXPERINCE- BASED SERVICE FOR PLATFORM", "CONTRACT BASED Last-Mile Delivery", "CONSOLE FROM KOREA, CHINA"],
+      ourservice4: ["Leading exhibition logistic provider", "Ware house 10minutes from major convention center of Las Vegas", "Dedicated trucking for exhibition cargo", "Expert for ATA CARNET CUSTOMS CLEARING & documentation", "On-site coordinators for show support", "Experienced logistic company for major brand", "Urgent DEMONSTRATION CARGO HANDLING"]
+    };
+
+    let currentService = 'ourservice1';
+    let currentCard = 0;
+    const links = {};
+
+    function init() {
+      for (const svc in cardTitles) {
+        links[svc] = cardTitles[svc].map(() => ({ url: '', ko: '', en: '', zh: '' }));
+      }
+      renderServiceTabs();
+      renderCardTabs();
+      renderEditor();
+    }
+
+    function renderServiceTabs() {
+      const container = document.getElementById('service-tabs');
+      container.innerHTML = '';
+      for (const svc in cardTitles) {
+        const btn = document.createElement('button');
+        btn.textContent = svc;
+        btn.className = 'tab-button' + (svc === currentService ? ' active' : '');
+        btn.onclick = () => {
+          currentService = svc;
+          currentCard = 0;
+          renderServiceTabs();
+          renderCardTabs();
+          renderEditor();
+        };
+        container.appendChild(btn);
+      }
+    }
+
+    function renderCardTabs() {
+      const container = document.getElementById('card-tabs');
+      container.innerHTML = '';
+      cardTitles[currentService].forEach((title, i) => {
+        const btn = document.createElement('button');
+        btn.textContent = title;
+        btn.className = 'card-button' + (i === currentCard ? ' active' : '');
+        btn.onclick = () => {
+          currentCard = i;
+          renderCardTabs();
+          renderEditor();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function renderEditor() {
+      const data = links[currentService][currentCard];
+      document.getElementById('editor').innerHTML = `
+        <label>링크 URL:</label><br/>
+        <input type="text" value="${data.url}" onchange="links['${currentService}'][${currentCard}].url = this.value; renderPreview();" />
+        <label>한국어 이름:</label><br/>
+        <input type="text" value="${data.ko}" onchange="links['${currentService}'][${currentCard}].ko = this.value; renderPreview();" />
+        <label>영어 이름:</label><br/>
+        <input type="text" value="${data.en}" onchange="links['${currentService}'][${currentCard}].en = this.value; renderPreview();" />
+        <label>중국어 이름:</label><br/>
+        <input type="text" value="${data.zh}" onchange="links['${currentService}'][${currentCard}].zh = this.value; renderPreview();" />
+      `;
+      renderPreview();
+    }
+
+    function renderPreview() {
+      const data = links[currentService][currentCard];
+      const lang = 'ko';
+      document.getElementById('preview').innerHTML = `<strong>미리보기:</strong><br/><a href="${data.url}" target="_blank">${data[lang] || '[링크 텍스트 없음]'}</a>`;
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      alert('로그아웃 되었습니다.');
+      window.location.href = '/admin-login.html';
+    });
+
+    document.getElementById('save-btn').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/save-links', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(links)
+        });
+        const result = await res.json();
+        alert('저장 완료: ' + result.message);
+      } catch (e) {
+        alert('저장 중 오류 발생: ' + e.message);
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
